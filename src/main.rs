@@ -24,6 +24,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut state = state::State::new()?;
 
     loop {
+        if state.is_done() {
+            break;
+        }
+
         terminal.draw(|mut f| {
             let size = f.size();
             let chunks = Layout::default()
@@ -31,9 +35,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .margin(1)
                 .constraints(
                     [
-                        Constraint::Max(3),
-                        Constraint::Percentage(50),
-                        Constraint::Percentage(50),
+                        Constraint::Min(3),
+                        Constraint::Percentage(25),
+                        Constraint::Percentage(75),
                     ]
                     .as_ref()
                 )
@@ -48,11 +52,41 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .borders(Borders::ALL),
                 )
                 .render(&mut f, chunks[2]);
+
+            let metadata_items = state.metadata()
+                .map(|path| Text::raw(path));
+            List::new(metadata_items)
+                .block(
+                    Block::default()
+                        .title("Metadata")
+                        .borders(Borders::ALL),
+                )
+                .render(&mut f, chunks[1]);
+
+            let stats_items = vec![
+                Text::Raw(format!("Remaining: {}", state.paths().count()).into()),
+            ];
+            List::new(stats_items.into_iter())
+                .block(
+                    Block::default()
+                        .title("Stats")
+                        .borders(Borders::ALL),
+                )
+                .render(&mut f, chunks[0]);
         })?;
 
         match events.next()? {
             events::Event::Input(key) => match key {
                 Key::Esc => break,
+                Key::Char('w') => state.write()?,
+                Key::Char(' ') => state.toggle_pause(),
+                Key::Char('1') => state.rate(state::Rating::R01)?,
+                Key::Char('2') => state.rate(state::Rating::R02)?,
+                Key::Char('4') => state.rate(state::Rating::R04)?,
+                Key::Char('6') => state.rate(state::Rating::R06)?,
+                Key::Char('8') => state.rate(state::Rating::R08)?,
+                Key::Char('0') => state.rate(state::Rating::R10)?,
+                Key::Ctrl('l') => terminal.clear()?,
                 _ => (),
             },
             events::Event::Tick => (),
@@ -60,6 +94,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     terminal.show_cursor()?;
+    state.write()?;
 
     Ok(())
 }

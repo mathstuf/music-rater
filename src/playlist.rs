@@ -50,6 +50,18 @@ impl Playlist {
         fs::write(path, &content)
     }
 
+    pub fn next(&self) -> Option<&Path> {
+        self.paths.front().map(AsRef::as_ref)
+    }
+
+    pub fn pop(&mut self) -> Option<PathBuf> {
+        self.paths.pop_front()
+    }
+
+    pub fn push(&mut self, path: PathBuf) {
+        self.paths.push_back(path)
+    }
+
     pub fn paths(&self) -> impl Iterator<Item = &PathBuf> {
         self.paths.iter()
     }
