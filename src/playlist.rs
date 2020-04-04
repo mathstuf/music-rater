@@ -49,4 +49,8 @@ impl Playlist {
 
         fs::write(path, &content)
     }
+
+    pub fn paths(&self) -> impl Iterator<Item = &PathBuf> {
+        self.paths.iter()
+    }
 }
