@@ -17,6 +17,10 @@ const IMPORTANT_KEYS: &[&str] = &[
     "ALBUMARTIST",
     "TITLE",
     "ARTIST",
+    "album",
+    "albumartist",
+    "title",
+    "artist",
 ];
 
 pub enum Rating {
