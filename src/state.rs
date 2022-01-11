@@ -16,10 +16,12 @@ const IMPORTANT_KEYS: &[&str] = &[
     "ALBUM",
     "ALBUMARTIST",
     "TITLE",
+    "SUBTITLE",
     "ARTIST",
     "album",
     "albumartist",
     "title",
+    "subtitle",
     "artist",
 ];
 
