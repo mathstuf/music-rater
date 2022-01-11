@@ -15,15 +15,15 @@ pub enum Event<I> {
 
 pub struct Events {
     rx: mpsc::Receiver<Event<Key>>,
-    input_handle: thread::JoinHandle<()>,
-    tick_handle: thread::JoinHandle<()>,
+    _input_handle: thread::JoinHandle<()>,
+    _tick_handle: thread::JoinHandle<()>,
 }
 
 impl Events {
     pub fn new() -> Self {
         let (tx, rx) = mpsc::channel();
 
-        let input_handle = {
+        let _input_handle = {
             let tx = tx.clone();
             thread::spawn(move || {
                 let stdin = io::stdin();
@@ -39,7 +39,7 @@ impl Events {
             })
         };
 
-        let tick_handle = {
+        let _tick_handle = {
             thread::spawn(move || {
                 loop {
                     tx.send(Event::Tick).unwrap();
@@ -50,8 +50,8 @@ impl Events {
 
         Self {
             rx,
-            input_handle,
-            tick_handle,
+            _input_handle,
+            _tick_handle,
         }
     }
 

@@ -73,7 +73,7 @@ type Player = Pausable<Repeat<Decoder<BufReader<Box<Cursor<Vec<u8>>>>>>>;
 pub struct State {
     playlists: Playlists,
     metadata: Option<MetaData>,
-    stream: OutputStream,
+    _stream: OutputStream,
     handle: OutputStreamHandle,
     sink: Sink,
 }
@@ -117,7 +117,7 @@ impl State {
             .next()
             .map(Self::prepare_path)
             .transpose()?;
-        let (stream, handle) = rodio::OutputStream::try_default()?;
+        let (_stream, handle) = rodio::OutputStream::try_default()?;
         let sink = Sink::try_new(&handle)?;
 
         let metadata = source.map(|(player, metadata)| {
@@ -128,7 +128,7 @@ impl State {
         Ok(Self {
             playlists,
             metadata,
-            stream,
+            _stream,
             handle,
             sink,
         })
