@@ -11,4 +11,4 @@ ogg = "0.7"
 rodio = { version = "0.11", default-features = false, features = ["vorbis"] }
 termion = "1.5"
 thiserror = "1.0"
-tui = "0.8"
+tui = "0.16"

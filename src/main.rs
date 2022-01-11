@@ -7,7 +7,8 @@ use termion::screen::AlternateScreen;
 use tui::Terminal;
 use tui::backend::TermionBackend;
 use tui::layout::{Constraint, Direction, Layout};
-use tui::widgets::{Block, Borders, List, Text, Widget};
+use tui::text::Text;
+use tui::widgets::{Block, Borders, List, ListItem};
 
 mod events;
 mod playlist;
@@ -28,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             break;
         }
 
-        terminal.draw(|mut f| {
+        terminal.draw(|f| {
             let size = f.size();
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
@@ -44,35 +45,37 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .split(size);
 
             let playlist_items = state.paths()
-                .map(|path| Text::raw(path.to_string_lossy()));
-            List::new(playlist_items)
+                .map(|path| ListItem::new(Text::raw(path.to_string_lossy())))
+                .collect::<Vec<_>>();
+            let playlist = List::new(playlist_items)
                 .block(
                     Block::default()
                         .title("Playlist")
                         .borders(Borders::ALL),
-                )
-                .render(&mut f, chunks[2]);
+                );
+            f.render_widget(playlist, chunks[2]);
 
             let metadata_items = state.metadata()
-                .map(|path| Text::raw(path));
-            List::new(metadata_items)
+                .map(|line| ListItem::new(Text::raw(line)))
+                .collect::<Vec<_>>();
+            let metadata = List::new(metadata_items)
                 .block(
                     Block::default()
                         .title("Metadata")
                         .borders(Borders::ALL),
-                )
-                .render(&mut f, chunks[1]);
+                );
+            f.render_widget(metadata, chunks[1]);
 
             let stats_items = vec![
-                Text::Raw(format!("Remaining: {}", state.paths().count()).into()),
+                ListItem::new(Text::raw(format!("Remaining: {}", state.paths().count()))),
             ];
-            List::new(stats_items.into_iter())
+            let stats = List::new(stats_items)
                 .block(
                     Block::default()
                         .title("Stats")
                         .borders(Borders::ALL),
-                )
-                .render(&mut f, chunks[0]);
+                );
+            f.render_widget(stats, chunks[0]);
         })?;
 
         match events.next()? {
