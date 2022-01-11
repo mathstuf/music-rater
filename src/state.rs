@@ -7,7 +7,7 @@ use lewton::VorbisError;
 use ogg::reading::PacketReader;
 use rodio::decoder::{Decoder, DecoderError};
 use rodio::source::{Pausable, Repeat, Source};
-use rodio::{Device, Sink};
+use rodio::{OutputStream, OutputStreamHandle, Sink};
 use thiserror::Error;
 
 use crate::playlist::Playlist;
@@ -73,14 +73,23 @@ type Player = Pausable<Repeat<Decoder<BufReader<Box<Cursor<Vec<u8>>>>>>>;
 pub struct State {
     playlists: Playlists,
     metadata: Option<MetaData>,
-    device: Device,
+    stream: OutputStream,
+    handle: OutputStreamHandle,
     sink: Sink,
 }
 
 #[derive(Debug, Error)]
 pub enum StateError {
-    #[error("no sink found")]
-    NoSink,
+    #[error("no device found")]
+    NoDevice {
+        #[from]
+        source: rodio::StreamError,
+    },
+    #[error("sink could not be created")]
+    SinkCreation {
+        #[from]
+        source: rodio::PlayError,
+    },
     #[error("i/o error")]
     Io {
         #[from]
@@ -108,9 +117,8 @@ impl State {
             .next()
             .map(Self::prepare_path)
             .transpose()?;
-        let device = rodio::default_output_device()
-            .ok_or(StateError::NoSink)?;
-        let sink = Sink::new(&device);
+        let (stream, handle) = rodio::OutputStream::try_default()?;
+        let sink = Sink::try_new(&handle)?;
 
         let metadata = source.map(|(player, metadata)| {
             sink.append(player);
@@ -120,7 +128,8 @@ impl State {
         Ok(Self {
             playlists,
             metadata,
-            device,
+            stream,
+            handle,
             sink,
         })
     }
@@ -174,7 +183,7 @@ impl State {
     }
 
     fn update_metadata(&mut self) -> StateResult<()> {
-        self.sink = Sink::new(&self.device);
+        self.sink = Sink::try_new(&self.handle)?;
         let source = self
             .playlists
             .todo
